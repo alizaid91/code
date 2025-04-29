@@ -1,0 +1,82 @@
+// Patterned Lines: Dotted, Dashed, Solid (Using DDA)
+#include <GL/glut.h>
+#include <cmath>
+#include <iostream>
+
+float x1_click, y1_click, x2_click, y2_click;
+bool firstClick = true;
+int lineType = 1; // 1 = solid, 2 = dotted, 3 = dashed
+
+void setPixel(float x, float y) {
+    glBegin(GL_POINTS);
+    glVertex2f(x, y);
+    glEnd();
+}
+
+void drawPatternedLine(float x1, float y1, float x2, float y2) {
+    float dx = x2 - x1;
+    float dy = y2 - y1;
+    float steps = std::max(std::abs(dx), std::abs(dy));
+    float Xinc = dx / steps;
+    float Yinc = dy / steps;
+    float x = x1, y = y1;
+
+    for (int i = 0; i <= steps; i++) {
+        if (lineType == 2 && i % 4 != 0) {}              // Dotted
+        else if (lineType == 3 && (i / 10) % 2 == 1) {}   // Dashed
+        else setPixel(x, y);
+        x += Xinc;
+        y += Yinc;
+    }
+}
+
+void mouseClick(int button, int state, int x, int y) {
+    if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
+        float fx = (float)(x - 250) / 250.0f;
+        float fy = (float)(250 - y) / 250.0f;
+        if (firstClick) {
+            x1_click = fx; y1_click = fy; firstClick = false;
+        } else {
+            x2_click = fx; y2_click = fy; firstClick = true;
+            drawPatternedLine(x1_click, y1_click, x2_click, y2_click);
+            glFlush();
+        }
+    }
+}
+
+void display() {
+    glClear(GL_COLOR_BUFFER_BIT);
+    glColor3f(0, 0, 0);
+    glBegin(GL_LINES);
+    glVertex2f(-1, 0); glVertex2f(1, 0); // X axis
+    glVertex2f(0, -1); glVertex2f(0, 1); // Y axis
+    glEnd();
+    glFlush();
+}
+
+void keyboard(unsigned char key, int, int) {
+    if (key == 's') lineType = 1; // Solid
+    if (key == 'd') lineType = 2; // Dotted
+    if (key == 'a') lineType = 3; // Dashed
+    glutPostRedisplay();
+}
+
+void init() {
+    glClearColor(1, 1, 1, 1);
+    glColor3f(0, 0, 1);
+    glPointSize(2);
+    gluOrtho2D(-1, 1, -1, 1);
+}
+
+int main(int argc, char** argv) {
+    glutInit(&argc, argv);
+    glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
+    glutInitWindowSize(500, 500);
+    glutCreateWindow("Dotted, Dashed, Solid Lines");
+    init();
+    glutDisplayFunc(display);
+    glutMouseFunc(mouseClick);
+    glutKeyboardFunc(keyboard);
+    glutMainLoop();
+    return 0;
+}
